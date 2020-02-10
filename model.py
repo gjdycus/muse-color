@@ -41,27 +41,29 @@ def process_csv(path):
             row_count += 1
     return data
 
-red_x_train = process_csv('./data/v1/red_train.csv')
-green_x_train = process_csv('./data/v1/green_train.csv')
-red_x_test = process_csv('./data/v1/red_test.csv')
-green_x_test = process_csv('./data/v1/green_test.csv')
+def get_x_y(paths, label):
+    x_train = []
+    for path in paths:
+        for row in process_csv(path):
+            x_train.append(row)
+    return create_windows(x_train, label)
 
-x_train, y_train = create_windows(red_x_train, 0)
-green_x_train, green_y_train = create_windows(green_x_train, 1)
-x_test, y_test = create_windows(red_x_test, 0)
-green_x_test, green_y_test = create_windows(green_x_test, 1)
+def combine_data(arrs):
+    res = arrs[0]
+    for i in range(1, len(arrs)):
+        for j in arrs[i]:
+            res.append(j)
+    return res
 
-for i in green_x_train:
-    x_train.append(i)
+red_x_train, red_y_train = get_x_y(['./data/v1/red_train.csv'], 0)
+green_x_train, green_y_train = get_x_y(['./data/v1/green_train.csv'], 1)
+red_x_test, red_y_test = get_x_y(['./data/v1/red_test.csv'], 0)
+green_x_test, green_y_test = get_x_y(['./data/v1/green_test.csv'], 1)
 
-for i in green_y_train:
-    y_train.append(i)
-
-for i in green_x_test:
-    x_test.append(i)
-
-for i in green_y_test:
-    y_test.append(i)
+x_train = combine_data([red_x_train, green_x_train])
+y_train = combine_data([red_y_train, green_y_train])
+x_test = combine_data([red_x_test, green_x_test])
+y_test = combine_data([red_y_test, green_y_test])
 
 x_train = np.array(x_train)
 y_train = np.array(y_train)
@@ -85,10 +87,10 @@ def train_model():
     model = create_model()
 
     model.fit(x_train, y_train,
-            epochs = 20,
-            batch_size = 64)
+            epochs = 30,
+            batch_size = 128)
 
-    [_, score] = model.evaluate(x_test, y_test, batch_size = 64)
+    [_, score] = model.evaluate(x_test, y_test, batch_size = 128)
     return model, score
 
 def best_model(num):
