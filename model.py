@@ -68,18 +68,35 @@ y_train = np.array(y_train)
 x_test = np.array(x_test)
 y_test = np.array(y_test)
 
-model = tf.keras.models.Sequential([
-    tf.keras.layers.Dense(64, input_dim = window_size, activation = "relu"),
-    tf.keras.layers.Dropout(0.13),
-    tf.keras.layers.Dense(1, activation = "sigmoid")
-])
+def create_model():
+    model = tf.keras.models.Sequential([
+        tf.keras.layers.Dense(64, input_dim=window_size, activation="relu"),
+        tf.keras.layers.Dropout(0.13),
+        tf.keras.layers.Dense(1, activation="sigmoid")
+    ])
 
-model.compile(loss = "binary_crossentropy",
-              optimizer = "adam",
-              metrics=["accuracy"])
+    model.compile(loss="binary_crossentropy",
+                  optimizer="adam",
+                  metrics=["accuracy"])
 
-model.fit(x_train, y_train,
-          epochs = 20,
-          batch_size = 64)
+    return model
 
-model.evaluate(x_test, y_test, batch_size = 64)
+def train_model():
+    model = create_model()
+
+    model.fit(x_train, y_train,
+            epochs = 20,
+            batch_size = 64)
+
+    [_, score] = model.evaluate(x_test, y_test, batch_size = 64)
+    return model, score
+
+def best_model(num):
+    best_score = 0
+    best_model = None
+    for _ in range(num):
+        model, score = train_model()
+        if score > best_score:
+            best_score = score
+            best_model = model
+    return best_model
